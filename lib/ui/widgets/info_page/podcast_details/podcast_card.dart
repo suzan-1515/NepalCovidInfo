@@ -36,7 +36,6 @@ class PodcastCard extends StatelessWidget {
         child: ExpansionTile(
           initiallyExpanded: isPlaying,
           backgroundColor: color.withOpacity(0.2),
-          tilePadding: EdgeInsets.zero,
           trailing: Offstage(),
           title: Row(
             mainAxisSize: MainAxisSize.min,
