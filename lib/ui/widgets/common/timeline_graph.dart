@@ -138,7 +138,6 @@ class _TimelineGraphState extends State<TimelineGraph> {
             fitInsideHorizontally: true,
           ),
         ),
-        clipToBorder: true,
         minX: sliderValues.start,
         maxX: sliderValues.end,
         minY: 0.0,
