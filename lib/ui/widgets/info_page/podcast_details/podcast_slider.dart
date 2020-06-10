@@ -7,7 +7,7 @@ import 'package:covid19_info/core/models/podcast_player_data.dart';
 
 import 'package:covid19_info/ui/styles/styles.dart';
 
-class PodcastSlider extends StatelessWidget {
+class PodcastSlider extends StatefulWidget {
   final PodcastPlayerData playerState;
 
   const PodcastSlider({
@@ -15,53 +15,27 @@ class PodcastSlider extends StatelessWidget {
   }) : assert(playerState != null);
 
   @override
+  _PodcastSliderState createState() => _PodcastSliderState();
+}
+
+class _PodcastSliderState extends State<PodcastSlider> {
+  bool isSeeking = false;
+  double seekValue = 0.0;
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<Duration>(
-      stream: playerState.currentPosition,
+      stream: widget.playerState.currentPosition,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final Duration currentDuration = snapshot.data;
 
-          if (currentDuration.inSeconds >= playerState.duration.inSeconds - 1) {
+          if (currentDuration.inSeconds >= widget.playerState.duration.inSeconds - 1 &&
+              !isSeeking) {
             context.bloc<PodcastPlayerBloc>()..add(CompletedPodcastEvent());
           }
 
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                format(currentDuration),
-                style: AppTextStyles.extraSmallLight,
-              ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8.0),
-                  valueIndicatorColor: AppColors.light.withOpacity(0.5),
-                  valueIndicatorTextStyle: AppTextStyles.smallDark,
-                ),
-                child: Slider(
-                  activeColor: AppColors.light,
-                  inactiveColor: AppColors.light.withOpacity(0.2),
-                  divisions: playerState.duration.inSeconds,
-                  min: 0.0,
-                  max: playerState.duration.inSeconds.toDouble(),
-                  value: currentDuration.inSeconds.toDouble(),
-                  label: format(currentDuration),
-                  onChanged: (value) {
-                    context.bloc<PodcastPlayerBloc>()
-                      ..add(SeekPodcastEvent(
-                        seconds: value,
-                      ));
-                  },
-                ),
-              ),
-              Text(
-                format(playerState.duration),
-                style: AppTextStyles.extraSmallLight,
-              ),
-            ],
-          );
+          return _buildSlider(currentDuration, context);
         }
         return Center(
           child: CircularProgressIndicator(
@@ -69,6 +43,53 @@ class PodcastSlider extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Row _buildSlider(Duration currentDuration, BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          format(currentDuration),
+          style: AppTextStyles.extraSmallLight,
+        ),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8.0),
+            valueIndicatorColor: AppColors.light.withOpacity(0.5),
+            valueIndicatorTextStyle: AppTextStyles.smallDark,
+          ),
+          child: Slider(
+            activeColor: AppColors.light,
+            inactiveColor: AppColors.light.withOpacity(0.2),
+            divisions: widget.playerState.duration.inSeconds,
+            min: 0.0,
+            max: widget.playerState.duration.inSeconds.toDouble(),
+            value: isSeeking ? seekValue : currentDuration.inSeconds.toDouble(),
+            label:
+                isSeeking ? format(Duration(seconds: seekValue.toInt())) : format(currentDuration),
+            onChangeStart: (_) => isSeeking = true,
+            onChangeEnd: (value) {
+              isSeeking = false;
+              context.bloc<PodcastPlayerBloc>()
+                ..add(SeekPodcastEvent(
+                  seconds: value,
+                ));
+            },
+            onChanged: (value) {
+              setState(() {
+                seekValue = value;
+              });
+            },
+          ),
+        ),
+        Text(
+          format(widget.playerState.duration),
+          style: AppTextStyles.extraSmallLight,
+        ),
+      ],
     );
   }
 
