@@ -16,6 +16,7 @@ class ScaleAnimator extends StatelessWidget {
     return Animator(
       curve: Curves.linearToEaseOut,
       duration: Duration(milliseconds: duration),
+      child: child,
       builder: (context, animatorState, widget) => ScaleTransition(
         scale: animatorState.animation,
         child: widget,
